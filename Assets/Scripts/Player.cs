@@ -6,8 +6,8 @@ public class Player : MonoBehaviour {
 
 	private Animator ani;
 	private Rigidbody2D rigidbody;
-	private Collider2D col;
-
+	private CapsuleCollider2D bodyCol;
+	private BoxCollider2D feetCol;
 	private float speed = 5f;
 	private float jumpHeight = 15f;
 	private float initialGravity;
@@ -15,7 +15,8 @@ public class Player : MonoBehaviour {
 
 	void Awake()
 	{
-		col = GetComponent<Collider2D>();
+		feetCol = GetComponent<BoxCollider2D>();
+		bodyCol = GetComponent<CapsuleCollider2D>();
 		ani = GetComponent<Animator>();
 		rigidbody = GetComponent<Rigidbody2D>();
 	}
@@ -23,16 +24,20 @@ public class Player : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
+		isAlive = true;
 		initialGravity = rigidbody.gravityScale;
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
+		if (!isAlive)
+			return;
 		Run();
 		Jump();
 		Climb();
 		Flip();
+		Die();
 	}
 
 	void Run()
@@ -45,7 +50,7 @@ public class Player : MonoBehaviour {
 
 	void Jump()
 	{
-		if (!col.IsTouchingLayers(LayerMask.GetMask("Ground")))
+		if (!feetCol.IsTouchingLayers(LayerMask.GetMask("Ground")))
 		return;
 
 		if (Input.GetKeyDown(KeyCode.Space)) {
@@ -57,7 +62,7 @@ public class Player : MonoBehaviour {
 
 	void Climb()
 	{
-		if (!col.IsTouchingLayers(LayerMask.GetMask("Climbing")))
+		if (!feetCol.IsTouchingLayers(LayerMask.GetMask("Climbing")))
 		{
 			ani.SetBool("IsClimbing", false);
 			rigidbody.gravityScale = initialGravity;
@@ -78,6 +83,17 @@ public class Player : MonoBehaviour {
 		if (HasSpeed)
 		{
 			transform.transform.localScale = new Vector2 (Mathf.Sign(rigidbody.velocity.x), 1f);
+		}
+	}
+
+	void Die()
+	{
+		if (feetCol.IsTouchingLayers(LayerMask.GetMask("Enemy", "Hazard")))
+		{
+			isAlive = false;
+			ani.SetTrigger("Die");
+			rigidbody.velocity = Vector3.zero;
+			GameSession.Instance.DeathEvent();
 		}
 	}
 

@@ -17,7 +17,7 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour {
 				{
 					GameObject newInstance = new GameObject();
 					newInstance.name = typeof(T).Name;
-					instance = newInstance.GetComponent<T>();
+					instance = newInstance.AddComponent<T>();
 				}
 			}
 			return instance;
